@@ -1,0 +1,58 @@
+body {
+    background-color: #003249;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-container {
+    background-color: #CCDBDC;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    margin: 20px; /* Add margin to create space at the top and bottom */
+}
+
+h1 {
+    color: #003249;
+}
+
+/* Rest of the CSS remains the same as in the previous example */
+
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-weight: bold;
+    margin-top: 10px;
+    color: #003249;
+}
+
+input {
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #003249;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #003249;
+    color: #CCDBDC;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #001f32;
+}
