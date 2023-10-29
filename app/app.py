@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from datetime import datetime
 from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin, current_user
 from flask_wtf import FlaskForm
@@ -25,7 +26,7 @@ def generate_password_hash(password):
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Virgo_129@localhost/social'  
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:#Nikki2203@localhost/social'  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -41,7 +42,7 @@ class User(db.Model):
     Pass = db.Column(db.String(255), nullable=False)
     FirstName = db.Column(db.String(255))
     LastName = db.Column(db.String(255))
-    Gender = db.Column(db.Enum('F', 'M'), nullable=False)
+    Gender = db.Column(db.Enum('F', 'M', 'f', 'm'), nullable=False)
     DateOfBirth = db.Column(db.Date)
     Bio = db.Column(db.Text)
 
@@ -128,6 +129,10 @@ class RegistrationForm(FlaskForm):
         if user:
             raise ValidationError('Email is already in use. Please use a different email.')
         
+@login_manager.user_loader
+def load_user(user_id):
+    # Replace this with your logic to load a user by their ID (e.g., from the database)
+    return User.query.get(int(user_id))  # Assuming User is your user model
         
 # User Profile
 @app.route('/profile/<int:user_id>')
@@ -289,6 +294,32 @@ def notifications():
     # Retrieve user's notifications (Notifications)
     user_notifications = Notification.query.filter_by(UserID=current_user.UserID).all()
     return render_template('notifications.html', notifications=user_notifications)
+
+# Join Operation to Retrieve Users and Their Posts
+@app.route('/users_and_posts')
+@login_required
+def users_and_posts():
+    users_with_posts = db.session.query(User.Username, Post.Content).join(Post).all()
+    return render_template('users_and_posts.html', users_with_posts=users_with_posts)
+
+# Union of Posts from User1 and User2
+@app.route('/union_of_posts')
+@login_required
+def union_of_posts():
+    user1_posts = Post.query.filter_by(UserID=1).all()
+    user2_posts = Post.query.filter_by(UserID=2).all()
+    posts_union = user1_posts + user2_posts
+    return render_template('union_of_posts.html', posts_union=posts_union)
+
+
+
+#total likes received
+@app.route('/total_likes_received/<int:user_id>')
+@login_required
+def total_likes_received(user_id):
+    # Use the stored function CalculateTotalLikesReceived to calculate total likes
+    total_likes = db.session.query(func.CalculateTotalLikesReceived(user_id)).scalar()
+    return render_template('total_likes.html', total_likes=total_likes)
 
 
 # Logout

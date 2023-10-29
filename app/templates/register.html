@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Social Media Registration</title>
-    <link rel="stylesheet" type="text/css" href="/app/static/styles/logreg.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/logreg.css') }}">
 </head>
 <body>
     <div class="login-container">
@@ -30,7 +30,7 @@
             <textarea id="bio" name="bio" placeholder="Write a short bio about yourself"></textarea>
             <button type="submit">Register</button>
         </form>
-        <p>Already have an account? <a href="login.html">Login here</a></p>
+        <p>Already have an account? <a href="/login">Login here</a></p>
     </div>
 </body>
 </html>
