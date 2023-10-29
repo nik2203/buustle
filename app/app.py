@@ -33,10 +33,10 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = 'User'
 
-    UserID = db.Column(db.Integer, primary_key=True)
+    userid = db.Column(db.Integer, primary_key=True)
     Username = db.Column(db.String(255), unique=True, nullable=False)
     Email = db.Column(db.String(255), unique=True, nullable=False)
     Pass = db.Column(db.String(255), nullable=False)
@@ -55,6 +55,9 @@ class User(db.Model):
         self.Gender = gender
         self.DateOfBirth = date_of_birth
         self.Bio = bio
+
+    def get_id(self):
+        return (self.userid)
 
 class Post(db.Model):
     __tablename__ = 'Post'
@@ -131,7 +134,7 @@ class RegistrationForm(FlaskForm):
         
 @login_manager.user_loader
 def load_user(user_id):
-    # Replace this with your logic to load a user by their ID (e.g., from the database)
+    # Replace this with your logic to load a user by their user_id (e.g., from the database)
     return User.query.get(int(user_id))  # Assuming User is your user model
         
 # User Profile
@@ -167,7 +170,7 @@ def create_post():
         else:
             flash('Please enter a post content', 'error')
     return render_template('create_post.html')
-
+'''
 # Sending Messages
 @app.route('/send_message/<int:recipient_id>', methods=['GET', 'POST'])
 @login_required
@@ -184,6 +187,7 @@ def send_message(recipient_id):
         else:
             flash('Please enter a message', 'error')
     return render_template('send_message.html', recipient=recipient)
+'''
 
 # Login Page
 @app.route('/login', methods=['GET', 'POST'])
@@ -292,7 +296,7 @@ def view_post(post_id):
 @login_required
 def notifications():
     # Retrieve user's notifications (Notifications)
-    user_notifications = Notification.query.filter_by(UserID=current_user.UserID).all()
+    user_notifications = Notification.query.filter_by(UserID=current_user.userid).all()
     return render_template('notifications.html', notifications=user_notifications)
 
 # Join Operation to Retrieve Users and Their Posts
