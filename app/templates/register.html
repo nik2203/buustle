@@ -1,13 +1,36 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Social Media Registration</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/logreg.css') }}">
 </head>
+
 <body>
+    <!-- Add this to your HTML body -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flash">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        <script>
+            // Automatically hide flashed messages after 5 seconds (5000 milliseconds)
+            setTimeout(function () {
+                var flashMessages = document.querySelector('.flash-messages');
+                if (flashMessages) {
+                    flashMessages.style.display = 'none';
+                }
+            }, 5000); // Adjust the time as needed
+        </script>
+        {% endif %}
+        {% endwith %}
+    </div>
     <div class="login-container">
         <h1>Register a New Account</h1>
-        <form>
+        <form method="POST" action="{{url_for('register')}}">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" placeholder="Enter your username" required>
             <label for="email">Email:</label>
@@ -33,4 +56,5 @@
         <p>Already have an account? <a href="/login">Login here</a></p>
     </div>
 </body>
+
 </html>

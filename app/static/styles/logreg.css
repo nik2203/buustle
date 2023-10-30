@@ -56,3 +56,28 @@ button {
 button:hover {
     background-color: #001f32;
 }
+
+
+/* Add this to your CSS file */
+.flash-messages {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    max-width: 300px;
+    z-index: 1000;
+    text-align: center;
+}
+
+.flash {
+    list-style: none;
+    padding: 10px;
+    background-color: #333; /* Change this to match your website's theme */
+    color: #fff;
+    border-radius: 5px;
+    margin: 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.flash li {
+    margin: 5px 0;
+}

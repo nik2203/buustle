@@ -1,4 +1,4 @@
-/* Styling for the entire home page */
+/* Styling for the entire notifications page */
 body {
     background-color: #36465D; /* Tumblr-like background color */
     font-family: Arial, sans-serif;
@@ -57,107 +57,49 @@ body {
     text-decoration: none; /* Remove underline on hover */
 }
 
-
-
+/* Styling for the content area */
 .content {
     background-color: #fff; /* Content background color */
     width: 100%;
-    max-width: 900px; /* Adjust the maximum content width as needed */
-    margin: 10px;
+    max-width: 600px; /* Adjust the maximum content width as needed */
+    margin: 20px 0; /* Spacing between content and navbar */
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Styling for individual posts */
-.post {
-    background-color: #fff; /* Post background color */
+.notification {
+    background-color: transparent; /* Set to transparent to prevent a white box when active */
     border: 1px solid #d1d1d1; /* Light gray border */
     border-radius: 10px; /* Rounded edges */
-    padding: 20px; /* Padding inside the post */
-    margin: 20px 0; /* Spacing between posts */
+    padding: 20px; /* Padding inside the notification */
+    margin: 20px 0; /* Spacing between notifications */
 }
 
-.post h2 {
-    font-size: 20px;
-    margin: 0;
-    color: #36465D; /* Post title color */
-}
-
-.post p {
+.notification p {
     font-size: 16px;
-    color: #333; /* Post content color */
+    color: #333; /* Text color for the notification */
     margin-top: 10px;
 }
 
-.post .buttons {
-    margin-top: 20px;
-}
-
-.post .buttons button {
+.accept-button,
+.reject-button {
     background-color: #007BFF; /* Button background color */
     color: #fff; /* Button text color */
     border: none;
     border-radius: 5px;
-    padding: 5px 10px;
-    margin-right: 10px;
+    padding: 10px 20px;
     cursor: pointer;
+    margin-right: 10px;
 }
 
-.post .buttons button:hover {
+.accept-button:hover,
+.reject-button:hover {
     background-color: #0056b3; /* Button background color on hover */
 }
 
-
-/* Existing CSS styles for the rest of the page */
-
-/* Styling for user requests section */
-.user-requests {
-    background-color: #fff;
-    width: 25%;
-    padding: 20px;
-    margin: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.user-requests h2 {
-    font-size: 18px;
-}
-
-.user-requests ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.user-requests li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.user-requests .request-button {
-    background-color: #007BFF;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 5px 10px;
-    cursor: pointer;
-}
-
-.user-requests .request-button:hover {
-    background-color: #0056b3;
-}
-
-.container {
-    display: flex; /* Set the container as a flexbox */
-    justify-content: space-between; /* Display its elements inline with space between them */
-    width: 100%;
-    max-width: 1400px; /* Adjust the maximum width as needed */
-    margin: 10px;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    margin: auto;
+/* Additional styling for the active tab (Notifications) */
+.active {
+    background-color: transparent; /* Set to transparent to prevent a white box when active */
+    color: #36465D; /* Text color for the active tab */
 }

@@ -8,9 +8,10 @@ from wtforms import StringField, PasswordField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from flask_wtf.file import FileField, FileAllowed
 import hashlib
+from flask import jsonify
 
 
-def generate_password_hash(password):
+def generate_password_hash(password,method):
     # Create a new SHA-256 hash object
     sha256 = hashlib.sha256()
     
@@ -27,6 +28,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:#Nikki2203@localhost/social'  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['TESTING'] = False
 app.permanent_session_lifetime = timedelta(minutes=30)
 db = SQLAlchemy(app)
 
@@ -131,19 +133,19 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(Email=field.data).first()
         if user:
             raise ValidationError('Email is already in use. Please use a different email.')
-        
+                
 @login_manager.user_loader
 def load_user(user_id):
     # Replace this with your logic to load a user by their user_id (e.g., from the database)
     return User.query.get(int(user_id))  # Assuming User is your user model
         
 # User Profile
-@app.route('/profile/<int:user_id>')
+@app.route('/profile/<user_id>')
 @login_required
 def profile(user_id):
     user = User.query.get(user_id)
     if user:
-        return render_template('profile.html', user=user)
+        return render_template('/profile', user=user)
     else:
         flash('User not found', 'error')
         return redirect(url_for('home'))
@@ -152,8 +154,10 @@ def profile(user_id):
 @app.route('/')
 @login_required
 def home():
+    # Query all users except the current logged-in user
+    users = User.query.filter(User.UserID != current_user.UserID).all()
     posts = Post.query.all()
-    return render_template('home.html', posts=posts)
+    return render_template('home.html', posts=posts, users=users)
 
 # Create a Post
 @app.route('/create_post', methods=['GET', 'POST'])
@@ -201,14 +205,14 @@ def login():
             flash('Logged in successfully', 'success')
             return redirect(url_for('home'))
         else:
-            flash('Login failed. Check your username and password.', 'error')
+            flash('Login failed. Check your username and password and try again.', 'error')
     return render_template('login.html')
 
 # Registration Page
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
-    if form.validate_on_submit():
+    if form.is_submitted():
         username = form.username.data
         password = form.password.data
         email = form.email.data
@@ -243,7 +247,8 @@ def register():
             db.session.commit()
             flash('Registration successful', 'success')
             return redirect(url_for('login'))
-
+    else:
+        print("invalid form:", form, dir(form), form.form_errors )
     return render_template('register.html', form=form)
 
 
@@ -274,7 +279,7 @@ def friends():
     return render_template('friends.html', friends=friends, friend_requests=friend_requests)
 
 # Post and Comment Interaction
-@app.route('/post/<int:post_id>', methods=['GET', 'POST'])
+@app.route('/post/<post_id>', methods=['GET', 'POST'])
 @login_required
 def view_post(post_id):
     post = Post.query.get(post_id)
@@ -296,7 +301,7 @@ def view_post(post_id):
 @login_required
 def notifications():
     # Retrieve user's notifications (Notifications)
-    user_notifications = Notification.query.filter_by(UserID=current_user.userid).all()
+    user_notifications = Notification.query.filter_by(UserID=current_user.UserID).all()
     return render_template('notifications.html', notifications=user_notifications)
 
 # Join Operation to Retrieve Users and Their Posts
@@ -318,7 +323,7 @@ def union_of_posts():
 
 
 #total likes received
-@app.route('/total_likes_received/<int:user_id>')
+@app.route('/total_likes_received/<user_id>')
 @login_required
 def total_likes_received(user_id):
     # Use the stored function CalculateTotalLikesReceived to calculate total likes
@@ -333,6 +338,34 @@ def logout():
     logout_user()
     flash('Logged out successfully', 'success')
     return redirect(url_for('login'))
+
+@app.route('/send_friend_request/<user_id>', methods=['POST'])
+@login_required
+def send_friend_request(user_id):
+    # Check if a friend request already exists
+    existing_request = Friendship.query.filter(
+        (Friendship.UserID1 == current_user.UserID) &
+        (Friendship.UserID2 == user_id)
+    ).first()
+
+    if existing_request:
+        return jsonify({'status': 'error', 'message': 'Friend request already sent.'})
+
+    # Create a new friend request
+    friend_request = Friendship(UserID1=current_user.UserID, UserID2=user_id, Status_='Pending')
+
+    # Get the sender's username
+    sender_username = current_user.Username
+
+    # Create a notification with a custom message
+    notification_content = f'You have a friend request from {sender_username}'
+    notification_new = Notification(UserID=user_id, Content=notification_content, Timestamps=datetime.utcnow())
+
+    db.session.add(friend_request)
+    db.session.add(notification_new)
+    db.session.commit()
+
+    return jsonify({'status': 'success', 'message': 'Friend request sent successfully.'})
 
 '''@app.before_request
 def before_request():
