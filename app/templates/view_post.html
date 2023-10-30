@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/post.css') }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('home') }}" class="navbar-logo">Buustle</a>
+        <ul>
+            <li><a href="/create_post">Create a Post</a></li>
+            <li class="right"><a href='/profile/{{ current_user.UserID }}'>Profile</a></li>
+            <li class="right"><a href="/notifications">Notifications</a></li>
+            <li class="right"><a href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+    <div class="post-container">
+        <div class="post">
+            <p>{{ post.Content }}</p>
+            <div class="buttons">
+                <form method="post">
+                    {% if user_liked %}
+                    <button class="like-button" type="submit" name="like" value="unlike">Unlike</button>
+                    {% else %}
+                    <button class="like-button" type="submit" name="like" value="like">Like</button>
+                    {% endif %}
+                </form>
+                <button class="comment-button">Comment</button>
+            </div>
+            <p><strong>Like Count:</strong> {{ like_count }}</p>
+        </div>
+
+        <div class="comments">
+            {% for comment in comments %}
+            <div class="comment">
+                <p><strong>{{ usernames[comment.UserID] }}:</strong> {{ comment.Content }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+
+</html>

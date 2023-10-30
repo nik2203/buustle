@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
+from sqlalchemy import func, not_
 from datetime import datetime, timedelta, timezone
 from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin, current_user
 from flask_wtf import FlaskForm
@@ -150,14 +150,31 @@ def profile(user_id):
         flash('User not found', 'error')
         return redirect(url_for('home'))
 
-# Home Feed
+
+@app.before_request
+def before_request():
+    if not current_user.is_authenticated:
+        # Exclude specific routes that should be accessible without login
+        if request.endpoint not in ['login', 'register', 'static']:
+            flash('You need to log in to access this page.', 'error')
+            return redirect(url_for('login'))
+
+
 @app.route('/')
 @login_required
 def home():
+    # Get the logged-in user's ID
+    current_user_id = current_user.UserID
+
     # Query all users except the current logged-in user
-    users = User.query.filter(User.UserID != current_user.UserID).all()
-    posts = Post.query.all()
+    users = User.query.filter(User.UserID != current_user_id).all()
+
+    # Query posts with a privacy setting of "Public" or from the logged-in user
+    posts = Post.query.filter((Post.PrivacySetting == 'Public') | (Post.UserID == current_user_id)).all()
+
     return render_template('home.html', posts=posts, users=users)
+
+
 
 # Create a Post
 @app.route('/create_post', methods=['GET', 'POST'])
@@ -278,23 +295,73 @@ def friends():
     friend_requests = Friendship.query.filter((Friendship.UserID2 == current_user.UserID) & (Friendship.Status_ == 'Pending')).all()
     return render_template('friends.html', friends=friends, friend_requests=friend_requests)
 
+@app.route('/delete_post/<post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = Post.query.get(post_id)
+
+    if post:
+        # Check if the post belongs to the current user or if the user is an admin (add your own logic for admin check)
+        if post.UserID == current_user.UserID or current_user.IsAdmin:
+            db.session.delete(post)
+            db.session.commit()
+            return jsonify({'status': 'success', 'message': 'Post deleted successfully.'})
+        else:
+            return jsonify({'status': 'error', 'message': 'You do not have permission to delete this post.'})
+    else:
+        return jsonify({'status': 'error', 'message': 'Post not found.'})
+
 # Post and Comment Interaction
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
 @login_required
 def view_post(post_id):
     post = Post.query.get(post_id)
+
     if request.method == 'POST':
-        content = request.form['content']
-        if content:
-            comment = Comment(PostID=post.PostID, UserID=current_user.UserID, Content=content)
-            db.session.add(comment)
-            db.session.commit()
-            flash('Comment added successfully', 'success')
-            return redirect(url_for('view_post', post_id=post.PostID))
-        else:
-            flash('Please enter a comment', 'error')
+        if 'like' in request.form:
+            # Handle like button click
+            like = UserLike.query.filter_by(PostID=post_id, UserID=current_user.UserID).first()
+
+            if like is None:
+                # User has not liked the post before, create a new like entry
+                new_like = UserLike(PostID=post_id, UserID=current_user.UserID)
+                db.session.add(new_like)
+                db.session.commit()
+            else:
+                # User has already liked the post, remove the like
+                db.session.delete(like)
+                db.session.commit()
+
+        elif 'comment' in request.form:
+            content = request.form['content']
+            if content:
+                comment = Comment(PostID=post.PostID, UserID=current_user.UserID, Content=content)
+                db.session.add(comment)
+                db.session.commit()
+                flash('Comment added successfully', 'success')
+                return redirect(url_for('view_post', post_id=post.PostID))
+            else:
+                flash('Please enter a comment', 'error')
+
+    # Retrieve comments related to the current post
     comments = Comment.query.filter_by(PostID=post_id).all()
-    return render_template('view_post.html', post=post, comments=comments)
+
+    # Create a dictionary to store usernames
+    usernames = {}
+    for comment in comments:
+        user = User.query.get(comment.UserID)
+        usernames[comment.UserID] = user.Username
+
+    # Fetch like count
+    like_count = UserLike.query.filter_by(PostID=post_id).count()
+
+    # Check if the current user has liked this post
+    user_liked = UserLike.query.filter_by(PostID=post_id, UserID=current_user.UserID).first() is not None
+
+    return render_template('view_post.html', post=post, comments=comments, usernames=usernames, like_count=like_count, user_liked=user_liked)
+
+
+
 
 # Notifications
 @app.route('/notifications')
