@@ -26,7 +26,7 @@
                     <button class="like-button" type="submit" name="like" value="like">Like</button>
                     {% endif %}
                 </form>
-                <button class="comment-button">Comment</button>
+                <button class="comment-button"><a href="{{ url_for('comment_post', post_id=post.PostID) }}" class="comment-button">Comment</a></button>
             </div>
             <p><strong>Like Count:</strong> {{ like_count }}</p>
         </div>

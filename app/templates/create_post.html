@@ -26,6 +26,14 @@
         <h1>Create a Post</h1>
         <form method="POST" action="/create_post">
             <textarea id="post-content" name="content" placeholder="What's on your mind?" required></textarea>
+            
+            <label for="privacy-setting">Privacy Setting:</label>
+            <select id="privacy-setting" name="privacy" required>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="friends">Friends-Only</option>
+            </select>
+            
             <button type="submit">Post</button>
         </form>
     </div>

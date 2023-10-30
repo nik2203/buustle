@@ -21,7 +21,7 @@
             <li class="right"><a href="/logout">Logout</a></li>
         </ul>
     </nav>
-    
+
 
     <!-- Inside the content section of 'home.html' -->
     <div class="container">
@@ -38,14 +38,14 @@
                         <p>{{ post.Content }}</p>
                     </a>
                     <div class="buttons">
-                        <button>Like</button>
-                        <button>Comment</button>
+                        <button><a href="{{ url_for('comment_post', post_id=post.PostID) }}"
+                                class="comment-button">Comment</a></button>
                         {% if post.UserID == current_user.UserID %}
                         <button onclick="deletePost('{{ post.PostID }}')">Delete</button>
                         {% endif %}
                     </div>
                 </div>
-                
+
                 {% endif %}
                 {% endfor %}
                 {% else %}
@@ -53,37 +53,8 @@
                 {% endif %}
             </ul>
             <script>
-                function sendFriendRequest(UserID) {
-                    $.ajax({
-                        type: 'POST',
-                        url: '/send_friend_request/' + UserID,
-                        success: function (response) {
-                            if (response.status === 'success') {
-                                alert('Friend request sent successfully.');
-                            } else {
-                                alert('Failed to send friend request.');
-                            }
-                        }
-                    });
-                }
-
-                function deletePost(PostID) {
-                    $.ajax({
-                        type: 'POST',
-                        url: '/delete_post/' + PostID,
-                        success: function (response) {
-                            if (response.status === 'success') {
-                                alert('Post deleted successfully.');
-                                // You can add further logic to remove the post from the DOM
-                            } else {
-                                alert('Failed to delete the post.');
-                            }
-                        }
-                    });
-                }
+                // Your existing JavaScript code here
             </script>
-
-
         </div>
 
         <!-- Right section for user requests -->
@@ -99,9 +70,8 @@
                 {% endfor %}
             </ul>
         </div>
-
-
     </div>
+
 </body>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -115,6 +85,20 @@
                     alert('Friend request sent successfully.');
                 } else {
                     alert('Failed to send friend request.');
+                }
+            }
+        });
+    }
+    function deletePost(PostID) {
+        $.ajax({
+            type: 'POST',
+            url: '/delete_post/' + PostID,
+            success: function (response) {
+                if (response.status === 'success') {
+                    alert('Post deleted successfully.');
+                    // You can add further logic to remove the post from the DOM
+                } else {
+                    alert('Failed to delete the post.');
                 }
             }
         });

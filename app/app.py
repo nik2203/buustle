@@ -134,11 +134,14 @@ class RegistrationForm(FlaskForm):
         if user:
             raise ValidationError('Email is already in use. Please use a different email.')
                 
+
+
 @login_manager.user_loader
 def load_user(user_id):
     # Replace this with your logic to load a user by their user_id (e.g., from the database)
     return User.query.get(int(user_id))  # Assuming User is your user model
         
+
 # User Profile
 @app.route('/profile/<user_id>')
 @login_required
@@ -175,15 +178,15 @@ def home():
     return render_template('home.html', posts=posts, users=users)
 
 
-
 # Create a Post
 @app.route('/create_post', methods=['GET', 'POST'])
 @login_required
 def create_post():
     if request.method == 'POST':
         content = request.form['content']
+        privacy = request.form['privacy']  # Retrieve the selected privacy setting
         if content:
-            post = Post(UserID=current_user.UserID, Content=content, PrivacySetting='Public')
+            post = Post(UserID=current_user.UserID, Content=content, PrivacySetting=privacy)  # Include the privacy setting
             db.session.add(post)
             db.session.commit()
             flash('Post created successfully', 'success')
@@ -224,6 +227,7 @@ def login():
         else:
             flash('Login failed. Check your username and password and try again.', 'error')
     return render_template('login.html')
+
 
 # Registration Page
 @app.route('/register', methods=['GET', 'POST'])
@@ -286,6 +290,7 @@ def edit_profile():
         return redirect(url_for('profile', user_id=current_user.UserID))
     return render_template('edit_profile.html')
 
+
 # User Relationships
 @app.route('/friends')
 @login_required
@@ -294,6 +299,7 @@ def friends():
     friends = Friendship.query.filter((Friendship.UserID1 == current_user.UserID) & (Friendship.Status_ == 'Accepted')).all()
     friend_requests = Friendship.query.filter((Friendship.UserID2 == current_user.UserID) & (Friendship.Status_ == 'Pending')).all()
     return render_template('friends.html', friends=friends, friend_requests=friend_requests)
+
 
 @app.route('/delete_post/<post_id>', methods=['POST'])
 @login_required
@@ -310,6 +316,7 @@ def delete_post(post_id):
             return jsonify({'status': 'error', 'message': 'You do not have permission to delete this post.'})
     else:
         return jsonify({'status': 'error', 'message': 'Post not found.'})
+
 
 # Post and Comment Interaction
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
@@ -361,6 +368,24 @@ def view_post(post_id):
     return render_template('view_post.html', post=post, comments=comments, usernames=usernames, like_count=like_count, user_liked=user_liked)
 
 
+@app.route('/comment_post/<post_id>', methods=['GET', 'POST'])
+@login_required
+def comment_post(post_id):
+    post = Post.query.get(post_id)
+
+    if request.method == 'POST':
+        content = request.form['comment']
+        if content:
+            comment = Comment(PostID=post.PostID, UserID=current_user.UserID, Content=content)
+            db.session.add(comment)
+            db.session.commit()
+            flash('Comment added successfully', 'success')
+            return redirect(url_for('view_post', post_id=post.PostID))
+        else:
+            flash('Please enter a comment', 'error')
+
+    comments = Comment.query.filter_by(PostID=post_id).all()
+    return render_template('comment_post.html', post=post, comments=comments)
 
 
 # Notifications
@@ -371,12 +396,24 @@ def notifications():
     user_notifications = Notification.query.filter_by(UserID=current_user.UserID).all()
     return render_template('notifications.html', notifications=user_notifications)
 
+
 # Join Operation to Retrieve Users and Their Posts
 @app.route('/users_and_posts')
 @login_required
 def users_and_posts():
     users_with_posts = db.session.query(User.Username, Post.Content).join(Post).all()
     return render_template('users_and_posts.html', users_with_posts=users_with_posts)
+
+
+@app.route('/check_like/<int:post_id>/<int:user_id>', methods=['GET'])
+def check_like(post_id, user_id):
+    # Query the database to check if the post is liked by the user
+    like = UserLike.query.filter_by(PostID=post_id, UserID=user_id).first()
+    
+    # Return a JSON response indicating whether the post is liked by the user
+    response = {'liked': like is not None}
+    return jsonify(response)
+
 
 # Union of Posts from User1 and User2
 @app.route('/union_of_posts')
@@ -388,16 +425,6 @@ def union_of_posts():
     return render_template('union_of_posts.html', posts_union=posts_union)
 
 
-
-#total likes received
-@app.route('/total_likes_received/<user_id>')
-@login_required
-def total_likes_received(user_id):
-    # Use the stored function CalculateTotalLikesReceived to calculate total likes
-    total_likes = db.session.query(func.CalculateTotalLikesReceived(user_id)).scalar()
-    return render_template('total_likes.html', total_likes=total_likes)
-
-
 # Logout
 @app.route('/logout')
 @login_required
@@ -405,6 +432,7 @@ def logout():
     logout_user()
     flash('Logged out successfully', 'success')
     return redirect(url_for('login'))
+
 
 @app.route('/send_friend_request/<user_id>', methods=['POST'])
 @login_required
@@ -433,19 +461,6 @@ def send_friend_request(user_id):
     db.session.commit()
 
     return jsonify({'status': 'success', 'message': 'Friend request sent successfully.'})
-
-'''@app.before_request
-def before_request():
-    if current_user.is_authenticated:
-        last_interaction = session.get('last_interaction')
-        now = datetime.now(timezone.utc)
-        
-        if last_interaction is None or (now - last_interaction) > timedelta(minutes=30):
-            logout_user()
-            flash('Session has expired. Please log in again.', 'error')
-            return redirect(url_for('login'))
-        
-        session['last_interaction'] = now'''
 
 if __name__ == '__main__':
     app.run(debug=True)
