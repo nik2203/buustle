@@ -1,14 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from flask_wtf.file import FileField, FileAllowed
 import hashlib
-
 
 
 def generate_password_hash(password):
@@ -28,6 +27,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:#Nikki2203@localhost/social'  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.permanent_session_lifetime = timedelta(minutes=30)
 db = SQLAlchemy(app)
 
 login_manager = LoginManager(app)
@@ -36,7 +36,7 @@ login_manager.login_view = 'login'
 class User(db.Model, UserMixin):
     __tablename__ = 'User'
 
-    userid = db.Column(db.Integer, primary_key=True)
+    UserID = db.Column(db.Integer, primary_key=True)
     Username = db.Column(db.String(255), unique=True, nullable=False)
     Email = db.Column(db.String(255), unique=True, nullable=False)
     Pass = db.Column(db.String(255), nullable=False)
@@ -57,7 +57,7 @@ class User(db.Model, UserMixin):
         self.Bio = bio
 
     def get_id(self):
-        return (self.userid)
+        return (self.UserID)
 
 class Post(db.Model):
     __tablename__ = 'Post'
@@ -162,7 +162,7 @@ def create_post():
     if request.method == 'POST':
         content = request.form['content']
         if content:
-            post = Post(UserID=current_user.UserID, Content=content)
+            post = Post(UserID=current_user.UserID, Content=content, PrivacySetting='Public')
             db.session.add(post)
             db.session.commit()
             flash('Post created successfully', 'success')
@@ -333,6 +333,19 @@ def logout():
     logout_user()
     flash('Logged out successfully', 'success')
     return redirect(url_for('login'))
+
+'''@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        last_interaction = session.get('last_interaction')
+        now = datetime.now(timezone.utc)
+        
+        if last_interaction is None or (now - last_interaction) > timedelta(minutes=30):
+            logout_user()
+            flash('Session has expired. Please log in again.', 'error')
+            return redirect(url_for('login'))
+        
+        session['last_interaction'] = now'''
 
 if __name__ == '__main__':
     app.run(debug=True)

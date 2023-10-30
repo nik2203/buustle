@@ -15,7 +15,6 @@
             <li class="right"><a href="/notifications">Notifications</a></li>
         </ul>
     </nav>
-    
 
     <!-- Inside the content section of 'home.html' -->
     <div class="content">
@@ -40,6 +39,18 @@
         </ul>
     </div>
 
+    <!-- Right section for user requests -->
+    <div class="user-requests">
+        <h2>User Requests</h2>
+        <ul>
+            {% for user in users %}
+            <li>
+                <span>{{ user.Username }}</span>
+                <button class="request-button" data-userid="{{ user.Id }}">Request</button>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 </body>
 
 </html>
