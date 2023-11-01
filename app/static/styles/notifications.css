@@ -103,3 +103,13 @@ body {
     background-color: transparent; /* Set to transparent to prevent a white box when active */
     color: #36465D; /* Text color for the active tab */
 }
+
+button {
+    background-color: #007BFF; /* Button background color */
+    color: #fff; /* Button text color */
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin-right: 10px;
+    cursor: pointer;
+}
