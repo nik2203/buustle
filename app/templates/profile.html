@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/home.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/sidebar.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('home') }}" class="navbar-logo">Buustle</a>
+        <ul>
+            <li class="right"><a href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+        <h1>User Profile</h1>
+        <h2>Welcome, {{ user.Username }}</h2>
+        <p>{{ user.Bio }}</p>
+
+        <div class="profile-tabs">
+            <ul>
+                <li class="active"><a href="#">Posts</a></li>
+                <!-- Add more tabs as needed -->
+            </ul>
+        </div>
+
+        <div class="profile-content">
+            <div id="posts-tab" class="tab-content active">
+                <!-- Display the user's posts here -->
+                <ul>
+                    {% for post in user_posts %}
+                        <li>
+                            <p>{{ post.Content }}</p>
+                            <div class="post-actions">
+                                <button class="like-button" data-postid="{{ post.PostID }}" onclick="likePost('{{ post.PostID }}')">Like</button>
+                                <button class="comment-button" data-postid="{{ post.PostID }}" onclick="toggleComments('{{ post.PostID }}')">Comments</button>
+                                <p id="like-count-{{ post.PostID }}"></p>
+                                <div id="comments-{{ post.PostID }}"></div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <!-- Add more tab content sections for other tabs -->
+        </div>
+    </div>
+</body>
+<script>
+    function likePost(postID) {
+        $.ajax({
+            type: 'POST',
+            url: '/like_post/' + postID,
+            success: function (response) {
+                if (response.status === 'success') {
+                    // Update the like count
+                    updateLikeCount(postID);
+                } else {
+                    alert('Failed to like the post.');
+                }
+            }
+        });
+    }
+
+    function toggleComments(postID) {
+        const commentsDiv = $('#comments-' + postID);
+        if (commentsDiv.is(':empty')) {
+            // If comments are not loaded, fetch and display them
+            $.get('/get_comments/' + postID, function (data) {
+                if (data.status === 'success') {
+                    commentsDiv.html('Comments: ' + data.comments.map(comment => comment.content).join(', '));
+                }
+            });
+        } else {
+            // If comments are already loaded, hide them
+            commentsDiv.empty();
+        }
+    }
+
+    function updateLikeCount(postID) {
+        $.get('/get_like_count/' + postID, function (data) {
+            if (data.status === 'success') {
+                $('#like-count-' + postID).text('Liked by ' + data.likeCount + ' users');
+            }
+        });
+    }
+</script>
+
+</html>

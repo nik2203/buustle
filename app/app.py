@@ -26,7 +26,7 @@ def generate_password_hash(password,method):
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:#Nikki2203@localhost/social'  
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Virgo_129@localhost/social'  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['TESTING'] = False
 app.permanent_session_lifetime = timedelta(minutes=30)
@@ -139,25 +139,23 @@ def load_user(user_id):
     # Replace this with your logic to load a user by their user_id (e.g., from the database)
     return User.query.get(int(user_id))  # Assuming User is your user model
         
-# User Profile
-@app.route('/profile/<user_id>')
-@login_required
-def profile(user_id):
-    user = User.query.get(user_id)
-    if user:
-        return render_template('/profile', user=user)
-    else:
-        flash('User not found', 'error')
-        return redirect(url_for('home'))
 
-# Home Feed
+
+#Home Feed
 @app.route('/')
 @login_required
 def home():
+    # Get the logged-in user's ID
+    current_user_id = current_user.UserID
+
     # Query all users except the current logged-in user
-    users = User.query.filter(User.UserID != current_user.UserID).all()
-    posts = Post.query.all()
+    users = User.query.filter(User.UserID != current_user_id).all()
+
+    # Query posts with a privacy setting of "Public" or from the logged-in user
+    posts = Post.query.filter((Post.PrivacySetting == 'Public') | (Post.UserID == current_user_id)).all()
+
     return render_template('home.html', posts=posts, users=users)
+
 
 # Create a Post
 @app.route('/create_post', methods=['GET', 'POST'])
@@ -251,6 +249,20 @@ def register():
         print("invalid form:", form, dir(form), form.form_errors )
     return render_template('register.html', form=form)
 
+# Profile Page
+@app.route('/profile')
+@login_required
+def profile():
+    # Get the logged-in user's ID
+    current_user_id = current_user.UserID
+
+    # Query the user's information
+    user = User.query.get(current_user_id)
+
+    # Query the user's posts
+    user_posts = Post.query.filter_by(UserID=current_user_id).all()
+
+    return render_template('profile.html', user=user, user_posts=user_posts)
 
 # User Profile Editing
 @app.route('/edit_profile', methods=['GET', 'POST'])
@@ -277,6 +289,22 @@ def friends():
     friends = Friendship.query.filter((Friendship.UserID1 == current_user.UserID) & (Friendship.Status_ == 'Accepted')).all()
     friend_requests = Friendship.query.filter((Friendship.UserID2 == current_user.UserID) & (Friendship.Status_ == 'Pending')).all()
     return render_template('friends.html', friends=friends, friend_requests=friend_requests)
+
+@app.route('/delete_post/<post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = Post.query.get(post_id)
+
+    if post:
+        # Check if the post belongs to the current user or if the user is an admin (add your own logic for admin check)
+        if post.UserID == current_user.UserID or current_user.IsAdmin:
+            db.session.delete(post)
+            db.session.commit()
+            return jsonify({'status': 'success', 'message': 'Post deleted successfully.'})
+        else:
+            return jsonify({'status': 'error', 'message': 'You do not have permission to delete this post.'})
+    else:
+        return jsonify({'status': 'error', 'message': 'Post not found.'})
 
 # Post and Comment Interaction
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
