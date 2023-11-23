@@ -26,7 +26,7 @@ def generate_password_hash(password,method):
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Virgo_129@localhost/social'  
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:#Nikki2203@localhost/social'  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['TESTING'] = False
 app.permanent_session_lifetime = timedelta(minutes=30)
@@ -141,16 +141,16 @@ def load_user(user_id):
     # Replace this with your logic to load a user by their user_id (e.g., from the database)
     return User.query.get(int(user_id))  # Assuming User is your user model
         
-# User Profile
-@app.route('/profile/<user_id>')
-@login_required
-def profile(user_id):
-    user = User.query.get(user_id)
-    if user:
-        return render_template('/profile', user=user)
-    else:
-        flash('User not found', 'error')
-        return redirect(url_for('home'))
+# # User Profile
+# @app.route('/profile/<user_id>')
+# @login_required
+# def profile(user_id):
+#     user = User.query.get(user_id)
+#     if user:
+#         return render_template('/profile', user=user)
+#     else:
+#         flash('User not found', 'error')
+#         return redirect(url_for('home'))
 
 # Home Feed
 @app.route('/')
@@ -202,7 +202,6 @@ def send_message(recipient_id):
             flash('Please enter a message', 'error')
     return render_template('send_message.html', recipient=recipient)
 '''
-
 # Login Page
 @app.route('/login', methods=['GET', 'POST'])
 def login():
